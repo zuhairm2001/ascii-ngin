@@ -5,6 +5,11 @@ import (
 	"os/exec"
 )
 
+type TermData struct {
+	Width  int
+	Height int
+}
+
 // making sure all of our deps are installed, assuming UNIX like system
 func CheckDependencies() error {
 	err := checkFFmpegInstalled()
@@ -39,6 +44,25 @@ func CheckDependencies() error {
 
 	return nil
 
+}
+
+func GetTerminalDimensions() (TermData, error) {
+	heightOut, err := exec.Command("tput", "lines").Output()
+	widthOut, err := exec.Command("tput", "cols").Output()
+	if err != nil {
+		return TermData{}, err
+	}
+
+	var rows, cols int
+	_, err = fmt.Sscanf(string(heightOut), "%d", &rows)
+	if err != nil {
+		return TermData{}, err
+	}
+	_, err = fmt.Sscanf(string(widthOut), "%d", &cols)
+	if err != nil {
+		return TermData{}, err
+	}
+	return TermData{Width: cols, Height: rows}, nil
 }
 
 func checkFFmpegInstalled() error {

@@ -77,18 +77,24 @@ func ExtractFrames() (VideoMetadata, error) {
 
 // in future we shouldnt need to pass in the filename we can get it based on the framenumber
 func FrameToASCII(frame FrameData, filename string) [][]rune {
-	height, err := GetImageHeight(filename)
+	height, width, err := GetImageDimensions(filename)
 	if err != nil {
-		fmt.Println("Error getting image height:", err)
+		fmt.Println("Error getting image dimensions:", err)
 		return [][]rune{}
 	}
 
-	newHeight := ascii.RecalculateHeight(height)
+	termData, err := GetTerminalDimensions()
+	if err != nil {
+		fmt.Println("Error getting terminal dimensions:", err)
+		return [][]rune{}
+	}
+
+	newWidth, newHeight := ascii.ScaledDimensions(height, width, termData.Width, termData.Height)
 
 	dir := filepath.Dir(filename)
 	base := filepath.Base(filename)
 	resizedFilename := filepath.Join(dir, "resized_images", "resized_"+base)
-	resizeerr := ResizeImage(filename, resizedFilename, newHeight)
+	resizeerr := ResizeImage(filename, resizedFilename, newWidth, newHeight)
 	if resizeerr != nil {
 		fmt.Println("Error resizing image:", resizeerr)
 		return [][]rune{}

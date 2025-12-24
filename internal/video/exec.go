@@ -5,23 +5,23 @@ import (
 	"os/exec"
 )
 
-func GetImageHeight(filename string) (int, error) {
-	out, err := exec.Command("magick", "identify", "-format", "%h", filename).Output()
+func GetImageDimensions(filename string) (int, int, error) {
+	out, err := exec.Command("magick", "identify", "-format", "%hx%w", filename).Output()
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	var height int
-	_, err = fmt.Sscanf(string(out), "%d", &height)
+	var height, width int
+	_, err = fmt.Sscanf(string(out), "%dx%d", &height, &width)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return height, nil
+	return height, width, nil
 }
 
-func ResizeImage(inputFile string, outputFile string, newHeight int) error {
-	stdout, err := exec.Command("magick", inputFile, "-resize", fmt.Sprintf("x%d", newHeight), outputFile).Output()
+func ResizeImage(inputFile string, outputFile string, newWidth int, newHeight int) error {
+	stdout, err := exec.Command("magick", inputFile, "-resize", fmt.Sprintf("%dx%d", newWidth, newHeight), outputFile).Output()
 	fmt.Print(string(stdout))
 	fmt.Print(err)
 	if err != nil {
