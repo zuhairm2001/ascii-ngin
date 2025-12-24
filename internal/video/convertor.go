@@ -1,6 +1,7 @@
 package video
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,8 @@ type PixelData struct {
 	Red   int
 	Green int
 	Blue  int
+	X     int
+	Y     int
 }
 
 type FrameData struct {
@@ -49,7 +52,12 @@ func Run() {
 	imagePath := getImagePath("test.png")
 	fmt.Print(imagePath)
 	asciiArt := FrameToASCII(FrameData{}, imagePath)
-	_ = asciiArt
+	PrintASCIIArt(asciiArt)
+	err = PrintASCIIArtToFile(asciiArt, "output.txt")
+	if err != nil {
+		fmt.Println("Error writing ASCII art to file:", err)
+		return
+	}
 	fmt.Println("ASCII Art generation completed.")
 
 }
@@ -63,6 +71,7 @@ func getImagePath(filename string) string {
 }
 
 func ExtractFrames() (VideoMetadata, error) {
+	// TODO
 	return VideoMetadata{}, nil
 }
 
@@ -76,7 +85,6 @@ func FrameToASCII(frame FrameData, filename string) [][]rune {
 
 	newHeight := ascii.RecalculateHeight(height)
 
-	// Get just the base filename and create output paths in appropriate directories
 	dir := filepath.Dir(filename)
 	base := filepath.Base(filename)
 	resizedFilename := filepath.Join(dir, "resized_images", "resized_"+base)
@@ -93,9 +101,23 @@ func FrameToASCII(frame FrameData, filename string) [][]rune {
 		return [][]rune{}
 	}
 
-	// Here we would read the textPixelDataFile and convert each pixel to ASCII
-	// For simplicity, we'll return an empty 2D slice for now
-	return [][]rune{}
+	pixelData, err := ReadTextFile(textPixelDataFile)
+	if err != nil {
+		fmt.Println("Error reading text pixel data file:", err)
+		return [][]rune{}
+	}
+
+	var asciiArt [][]rune
+	for _, row := range pixelData {
+		var asciiRow []rune
+		for _, pixel := range row {
+			asciiChar := PixelToASCII(pixel)
+			asciiRow = append(asciiRow, asciiChar)
+		}
+		asciiArt = append(asciiArt, asciiRow)
+	}
+
+	return asciiArt
 }
 
 // given rbg values of a pixel return the corresponding ascii character
@@ -110,6 +132,87 @@ func PixelToASCII(pixel PixelData) rune {
 	return ascii.MapLuminanceToASCII(luminance)
 }
 
+func ReadTextFile(filePath string) ([][]PixelData, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var pixelData [][]PixelData
+	var currentRowPixelArr []PixelData
+	currentRow := 0
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" || line[0] == '#' {
+			continue
+		}
+
+		pixel, err := ReadLine(line)
+		if err != nil {
+			continue
+		}
+
+		if pixel.Y != currentRow {
+			if len(currentRowPixelArr) > 0 {
+				pixelData = append(pixelData, currentRowPixelArr)
+			}
+			currentRowPixelArr = []PixelData{}
+			currentRow = pixel.Y
+		}
+
+		currentRowPixelArr = append(currentRowPixelArr, pixel)
+	}
+
+	if len(currentRowPixelArr) > 0 {
+		pixelData = append(pixelData, currentRowPixelArr)
+	}
+
+	return pixelData, nil
+}
+
+func ReadLine(line string) (PixelData, error) {
+	var x, y, r, g, b int
+	_, err := fmt.Sscanf(line, "%d,%d: (%d,%d,%d)", &x, &y, &r, &g, &b)
+	if err != nil {
+		return PixelData{}, err
+	}
+	return PixelData{X: x, Y: y, Red: r, Green: g, Blue: b}, nil
+}
+
+func PrintASCIIArt(asciiArt [][]rune) {
+	for _, row := range asciiArt {
+		for _, char := range row {
+			fmt.Print(string(char))
+		}
+		fmt.Println()
+	}
+}
+
+func PrintASCIIArtToFile(asciiArt [][]rune, outputFile string) error {
+	file, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	for _, row := range asciiArt {
+		for _, char := range row {
+			_, err := writer.WriteString(string(char))
+			if err != nil {
+				return err
+			}
+		}
+		_, err := writer.WriteString("\n")
+		if err != nil {
+			return err
+		}
+	}
+	return writer.Flush()
+}
 func GetFrameCount(video VideoData) int {
 	return video.FrameCount
 }
