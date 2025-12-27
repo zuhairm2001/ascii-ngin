@@ -49,7 +49,7 @@ func Run() {
 		return
 	}
 	fmt.Println("All dependencies are installed. Proceeding with video processing...")
-	imagePath := getImagePath("test.png")
+	imagePath := getImagePath("test.jpg")
 	fmt.Print(imagePath)
 	asciiArt := FrameToASCII(FrameData{}, imagePath)
 	PrintASCIIArt(asciiArt)

@@ -21,7 +21,7 @@ func GetImageDimensions(filename string) (int, int, error) {
 }
 
 func ResizeImage(inputFile string, outputFile string, newWidth int, newHeight int) error {
-	stdout, err := exec.Command("magick", inputFile, "-resize", fmt.Sprintf("%dx%d", newWidth, newHeight), outputFile).Output()
+	stdout, err := exec.Command("magick", inputFile, "-resize", fmt.Sprintf("%dx%d\\!", newWidth, newHeight), outputFile).Output()
 	fmt.Print(string(stdout))
 	fmt.Print(err)
 	if err != nil {

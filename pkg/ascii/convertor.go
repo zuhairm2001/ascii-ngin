@@ -1,10 +1,15 @@
 package ascii
 
+import (
+	"log"
+)
+
 const ASCII_CHARS = " .'\\`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
 const LUMINANCE_THRESHOLD = 30
 const FONT_RATIO = 0.44
 const LUMINANCE_RANGE = 255.0
-const ASPECT_RATIO = 1920.0 / 1080.0
+
+var logger = log.Default()
 
 func CalculateLuminance(r, g, b int) float64 {
 	return 0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)
@@ -16,13 +21,17 @@ func MapLuminanceToASCII(luminance float64) rune {
 }
 
 func ScaledDimensions(imgWidth, imgHeight, termCols, termRows int) (cols, rows int) {
+	logger.Println("scaling image with"+" imgWidth:", imgWidth, " imgHeight:", imgHeight, " termCols:", termCols, " termRows:", termRows)
 	widthCols, widthRows := ScaleToWidth(imgWidth, imgHeight, termCols)
 
 	if widthRows <= termRows {
+		logger.Printf("scaling to width: %d x %d\n", widthCols, widthRows)
 		return widthCols, widthRows
 	}
-
-	return ScaleToHeight(imgWidth, imgHeight, termRows)
+	heightCols, heightRows := ScaleToHeight(imgWidth, imgHeight, termRows)
+	logger.Printf("scaling to height: %d x %d\n", heightCols, heightRows)
+	return heightCols, heightRows
+	// return ScaleToHeight(imgWidth, imgHeight, termRows)
 }
 
 func ScaleToWidth(imgWidth, imgHeight, targetCols int) (cols, rows int) {
