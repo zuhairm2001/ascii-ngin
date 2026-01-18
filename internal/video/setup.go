@@ -2,7 +2,10 @@ package video
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+
+	"golang.org/x/term"
 )
 
 type TermData struct {
@@ -22,22 +25,11 @@ func CheckDependencies() error {
 }
 
 func GetTerminalDimensions() (TermData, error) {
-	heightOut, err := exec.Command("tput", "lines").Output()
-	widthOut, err := exec.Command("tput", "cols").Output()
+	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		return TermData{}, err
 	}
-
-	var rows, cols int
-	_, err = fmt.Sscanf(string(heightOut), "%d", &rows)
-	if err != nil {
-		return TermData{}, err
-	}
-	_, err = fmt.Sscanf(string(widthOut), "%d", &cols)
-	if err != nil {
-		return TermData{}, err
-	}
-	return TermData{Width: cols, Height: rows}, nil
+	return TermData{Width: width, Height: height}, nil
 }
 
 func checkFFmpegInstalled() error {
