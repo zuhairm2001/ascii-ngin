@@ -1,3 +1,15 @@
+// CLI usage:
+//
+//	go run ./cmd/ascii-ngin [flags] <video>
+//
+// Flags:
+//
+//	--fps=<int>           Frames per second for playback (default: 24)
+//	--term-size=WxH       Override terminal size (example: 120x40 or 120,40)
+//	--dump-dir=<path>     Write pixel dumps to directory
+//	--ndjson-out=<path>   Write NDJSON frames to file
+//	--ndjson-in=<path>    Read NDJSON frames from file
+//	--debug               Enable debug logging
 package main
 
 import (
