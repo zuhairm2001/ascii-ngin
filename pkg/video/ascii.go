@@ -40,6 +40,24 @@ func FileToASCII(filename string, options ASCIIOptions) ([][]rune, error) {
 }
 
 func ImageToASCII(img image.Image, name string, options ASCIIOptions) ([][]rune, error) {
+	if options.TermWidth == 0 || options.TermHeight == 0 {
+		termData, err := GetTerminalDimensions()
+		if err == nil {
+			if options.TermWidth == 0 {
+				options.TermWidth = termData.Width
+			}
+			if options.TermHeight == 0 {
+				options.TermHeight = termData.Height
+			}
+		}
+	}
+	if options.TermWidth == 0 {
+		options.TermWidth = 80
+	}
+	if options.TermHeight == 0 {
+		options.TermHeight = 24
+	}
+
 	bounds := img.Bounds()
 	newWidth, newHeight := ascii.ScaledDimensions(bounds.Dx(), bounds.Dy(), options.TermWidth, options.TermHeight)
 	if newWidth < 1 {

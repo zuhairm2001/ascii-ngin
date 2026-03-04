@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/png"
 	_ "image/png"
 	"io"
 	"os/exec"
@@ -40,7 +41,7 @@ func ExtractFramesPipe(videoPath string, fps int) (<-chan image.Image, <-chan er
 
 		reader := bufio.NewReader(stdout)
 		for {
-			img, _, err := image.Decode(reader)
+			img, err := decodeNextPNG(reader)
 			if err != nil {
 				if err == io.EOF {
 					break
@@ -59,4 +60,35 @@ func ExtractFramesPipe(videoPath string, fps int) (<-chan image.Image, <-chan er
 	}()
 
 	return images, errs
+}
+
+func decodeNextPNG(reader *bufio.Reader) (image.Image, error) {
+	if err := skipToNextPNG(reader); err != nil {
+		return nil, err
+	}
+	return png.Decode(reader)
+}
+
+func skipToNextPNG(reader *bufio.Reader) error {
+	const maxDiscard = 4 * 1024 * 1024
+	const signature = "\x89PNG\r\n\x1a\n"
+	const signatureSize = 8
+
+	discarded := 0
+	for {
+		peeked, err := reader.Peek(signatureSize)
+		if err != nil {
+			return err
+		}
+		if string(peeked) == signature {
+			return nil
+		}
+		if _, err := reader.ReadByte(); err != nil {
+			return err
+		}
+		discarded++
+		if discarded > maxDiscard {
+			return fmt.Errorf("png signature not found")
+		}
+	}
 }

@@ -12,6 +12,7 @@ const (
 )
 
 var logger = log.Default()
+var Debug bool
 
 func CalculateLuminance(r, g, b int) float64 {
 	return 0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)
@@ -23,15 +24,21 @@ func MapLuminanceToASCII(luminance float64) rune {
 }
 
 func ScaledDimensions(imgWidth, imgHeight, termCols, termRows int) (cols, rows int) {
-	logger.Println("scaling image with"+" imgWidth:", imgWidth, " imgHeight:", imgHeight, " termCols:", termCols, " termRows:", termRows)
+	if Debug {
+		logger.Println("scaling image with"+" imgWidth:", imgWidth, " imgHeight:", imgHeight, " termCols:", termCols, " termRows:", termRows)
+	}
 	widthCols, widthRows := ScaleToWidth(imgWidth, imgHeight, termCols)
 
 	if widthRows <= termRows {
-		logger.Printf("scaling to width: %d x %d\n", widthCols, widthRows)
+		if Debug {
+			logger.Printf("scaling to width: %d x %d\n", widthCols, widthRows)
+		}
 		return widthCols, widthRows
 	}
 	heightCols, heightRows := ScaleToHeight(imgWidth, imgHeight, termRows)
-	logger.Printf("scaling to height: %d x %d\n", heightCols, heightRows)
+	if Debug {
+		logger.Printf("scaling to height: %d x %d\n", heightCols, heightRows)
+	}
 	return heightCols, heightRows
 	// return ScaleToHeight(imgWidth, imgHeight, termRows)
 }
