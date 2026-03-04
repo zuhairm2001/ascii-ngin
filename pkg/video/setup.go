@@ -8,11 +8,6 @@ import (
 	"golang.org/x/term"
 )
 
-type TermData struct {
-	Width  int
-	Height int
-}
-
 // CheckDependencies verifies required system dependencies are installed
 func CheckDependencies() error {
 	err := checkFFmpegInstalled()
@@ -24,12 +19,12 @@ func CheckDependencies() error {
 	return nil
 }
 
-func GetTerminalDimensions() (TermData, error) {
+func GetTerminalDimensions() (TermSize, error) {
 	width, height, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		return TermData{}, err
+		return TermSize{}, err
 	}
-	return TermData{Width: width, Height: height}, nil
+	return TermSize{Width: width, Height: height}, nil
 }
 
 func checkFFmpegInstalled() error {
