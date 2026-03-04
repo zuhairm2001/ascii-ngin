@@ -6,6 +6,7 @@ import (
 	"image"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/zuhairm2001/ascii-ngin/pkg/ascii"
 )
@@ -90,7 +91,7 @@ func PrintASCIIArt(asciiArt [][]rune) {
 	}
 }
 
-func PrintASCIIArtToFile(asciiArt [][]rune, outputFile string) error {
+func WriteASCIIArtToFile(asciiArt [][]rune, outputFile string) error {
 	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
@@ -111,4 +112,22 @@ func PrintASCIIArtToFile(asciiArt [][]rune, outputFile string) error {
 		}
 	}
 	return writer.Flush()
+}
+
+func ASCIIArtToString(asciiArt [][]rune) string {
+	if len(asciiArt) == 0 {
+		return ""
+	}
+
+	var builder strings.Builder
+	for rowIndex, row := range asciiArt {
+		for _, char := range row {
+			builder.WriteRune(char)
+		}
+		if rowIndex < len(asciiArt)-1 {
+			builder.WriteByte('\n')
+		}
+	}
+
+	return builder.String()
 }

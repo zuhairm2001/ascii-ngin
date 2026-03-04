@@ -4,10 +4,12 @@ import (
 	"log"
 )
 
-const ASCII_CHARS = " .'\\`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
-const LUMINANCE_THRESHOLD = 30
-const FONT_RATIO = 0.44
-const LUMINANCE_RANGE = 255.0
+const (
+	ASCII_CHARS         = " .'\\`^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+	LUMINANCE_THRESHOLD = 30
+	FONT_RATIO          = 0.44
+	LUMINANCE_RANGE     = 255.0
+)
 
 var logger = log.Default()
 

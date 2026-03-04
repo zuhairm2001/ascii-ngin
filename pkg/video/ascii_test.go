@@ -43,8 +43,8 @@ var _ = Describe("ImageToASCII", func() {
 
 func newSolidImage(width int, height int, c color.RGBA) image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := range height {
+		for x := range width {
 			img.SetRGBA(x, y, c)
 		}
 	}

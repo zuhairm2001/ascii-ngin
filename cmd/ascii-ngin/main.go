@@ -38,7 +38,7 @@ func main() {
 	}
 
 	video.PrintASCIIArt(asciiArt)
-	if err := video.PrintASCIIArtToFile(asciiArt, "output.txt"); err != nil {
+	if err := video.WriteASCIIArtToFile(asciiArt, "output.txt"); err != nil {
 		fmt.Println("Error writing ASCII art to file:", err)
 		return
 	}
@@ -53,6 +53,8 @@ func getImagePath(filename string) string {
 	return filepath.Join(baseDir, filename)
 }
 
+// we use this for testing purposes
+// we can test various terminal sizes with this flag
 func parseTermSize(value string) (int, int, error) {
 	if strings.TrimSpace(value) == "" {
 		return 0, 0, nil

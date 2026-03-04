@@ -25,3 +25,18 @@ type TermSize struct {
 	Width  int
 	Height int
 }
+
+type MetaRecord struct {
+	Type   string `json:"type"`
+	FPS    int    `json:"fps"`
+	W      int    `json:"w"`
+	H      int    `json:"h"`
+	Source string `json:"source"`
+}
+
+type FrameRecord struct {
+	I int    `json:"i"`
+	W int    `json:"w"`
+	H int    `json:"h"`
+	F string `json:"f"`
+}
