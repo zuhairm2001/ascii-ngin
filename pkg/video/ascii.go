@@ -17,28 +17,6 @@ type ASCIIOptions struct {
 	PixelDumpDir string
 }
 
-func FileToASCII(filename string, options ASCIIOptions) ([][]rune, error) {
-	img, err := DecodeImage(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	if options.TermWidth == 0 || options.TermHeight == 0 {
-		termData, err := GetTerminalDimensions()
-		if err != nil {
-			return nil, err
-		}
-		if options.TermWidth == 0 {
-			options.TermWidth = termData.Width
-		}
-		if options.TermHeight == 0 {
-			options.TermHeight = termData.Height
-		}
-	}
-
-	return ImageToASCII(img, filepath.Base(filename), options)
-}
-
 func ImageToASCII(img image.Image, name string, options ASCIIOptions) ([][]rune, error) {
 	if options.TermWidth == 0 || options.TermHeight == 0 {
 		termData, err := GetTerminalDimensions()
