@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Config holds application configuration loaded from config.json.
@@ -14,15 +15,21 @@ type Config struct {
 var cfg Config
 var loaded bool
 
-// Load reads config.json from the current working directory and caches
-// the result in package-level state. It returns an error if the file
-// is missing, malformed, or if required fields are empty.
+// Load finds config.json by walking up from the current working directory
+// until it reaches the filesystem root, then reads and caches the result.
+// It returns an error if the file is not found, malformed, or if required
+// fields are empty.
 //
 // TODO: resolve config path from ~/.ascii-ngin/config.json for distribution.
 func Load() error {
-	f, err := os.Open("config.json")
+	path, err := findConfig("config.json")
 	if err != nil {
-		return fmt.Errorf("config: open config.json: %w", err)
+		return fmt.Errorf("config: %w", err)
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("config: open %s: %w", path, err)
 	}
 	defer f.Close()
 
@@ -45,4 +52,25 @@ func Get() Config {
 		panic("config: Get() called before Load()")
 	}
 	return cfg
+}
+
+// findConfig walks up from the current working directory looking for
+// a file with the given name. Returns the absolute path if found.
+func findConfig(name string) (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("getwd: %w", err)
+	}
+
+	for {
+		path := filepath.Join(dir, name)
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("%s not found in any parent directory", name)
+		}
+		dir = parent
+	}
 }

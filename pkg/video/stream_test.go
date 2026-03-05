@@ -3,23 +3,54 @@ package video_test
 import (
 	"image"
 	"image/color"
+	"testing"
 
-	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/zuhairm2001/ascii-ngin/pkg/video"
 )
 
-var _ = Describe("ASCIIFrameStream", func() {
-	DescribeTable("converts images into frame records",
-		func(images []image.Image, options video.ASCIIOptions, expectedCount int, expectedWidth int, expectedHeight int) {
-			imageChan := make(chan image.Image, len(images))
-			for _, img := range images {
+func TestASCIIFrameStream(t *testing.T) {
+	tests := []struct {
+		name           string
+		images         []image.Image
+		options        video.ASCIIOptions
+		expectedCount  int
+		expectedWidth  int
+		expectedHeight int
+	}{
+		{
+			name:           "single image",
+			images:         []image.Image{newSolidImage(2, 2, color.RGBA{R: 255, G: 255, B: 255, A: 255})},
+			options:        video.ASCIIOptions{TermWidth: 2, TermHeight: 2},
+			expectedCount:  1,
+			expectedWidth:  2,
+			expectedHeight: 1,
+		},
+		{
+			name: "multiple images",
+			images: []image.Image{
+				newSolidImage(3, 3, color.RGBA{R: 0, G: 0, B: 0, A: 255}),
+				newSolidImage(3, 3, color.RGBA{R: 0, G: 0, B: 0, A: 255}),
+			},
+			options:        video.ASCIIOptions{TermWidth: 3, TermHeight: 3},
+			expectedCount:  2,
+			expectedWidth:  3,
+			expectedHeight: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+
+			imageChan := make(chan image.Image, len(tt.images))
+			for _, img := range tt.images {
 				imageChan <- img
 			}
 			close(imageChan)
 
-			frames, errs := video.ASCIIFrameStream(imageChan, nil, options)
+			frames, errs := video.ASCIIFrameStream(imageChan, nil, tt.options)
 
 			var collected []video.FrameRecord
 			for frame := range frames {
@@ -27,33 +58,16 @@ var _ = Describe("ASCIIFrameStream", func() {
 			}
 
 			for err := range errs {
-				Expect(err).NotTo(HaveOccurred())
+				g.Expect(err).NotTo(HaveOccurred())
 			}
 
-			Expect(collected).To(HaveLen(expectedCount))
+			g.Expect(collected).To(HaveLen(tt.expectedCount))
 			for index, frame := range collected {
-				Expect(frame.I).To(Equal(index))
-				Expect(frame.W).To(Equal(expectedWidth))
-				Expect(frame.H).To(Equal(expectedHeight))
-				Expect(frame.F).NotTo(BeEmpty())
+				g.Expect(frame.I).To(Equal(index))
+				g.Expect(frame.W).To(Equal(tt.expectedWidth))
+				g.Expect(frame.H).To(Equal(tt.expectedHeight))
+				g.Expect(frame.F).NotTo(BeEmpty())
 			}
-		},
-		Entry("single image",
-			[]image.Image{newSolidImage(2, 2, color.RGBA{R: 255, G: 255, B: 255, A: 255})},
-			video.ASCIIOptions{TermWidth: 2, TermHeight: 2},
-			1,
-			2,
-			1,
-		),
-		Entry("multiple images",
-			[]image.Image{
-				newSolidImage(3, 3, color.RGBA{R: 0, G: 0, B: 0, A: 255}),
-				newSolidImage(3, 3, color.RGBA{R: 0, G: 0, B: 0, A: 255}),
-			},
-			video.ASCIIOptions{TermWidth: 3, TermHeight: 3},
-			2,
-			3,
-			1,
-		),
-	)
-})
+		})
+	}
+}

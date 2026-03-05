@@ -5,59 +5,82 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"testing"
 
-	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/zuhairm2001/ascii-ngin/pkg/video"
 )
 
-var _ = Describe("ReadPixelDump", func() {
-	DescribeTable("reads pixel dump output",
-		func(width int, height int, c color.RGBA, expectedRed int) {
-			img := image.NewRGBA(image.Rect(0, 0, width, height))
-			for y := 0; y < height; y++ {
-				for x := 0; x < width; x++ {
-					img.SetRGBA(x, y, c)
+func TestReadPixelDump(t *testing.T) {
+	tests := []struct {
+		name        string
+		width       int
+		height      int
+		c           color.RGBA
+		expectedRed int
+	}{
+		{
+			name:        "small red image",
+			width:       2,
+			height:      2,
+			c:           color.RGBA{R: 100, G: 0, B: 0, A: 255},
+			expectedRed: 100,
+		},
+		{
+			name:        "small white image",
+			width:       1,
+			height:      1,
+			c:           color.RGBA{R: 255, G: 255, B: 255, A: 255},
+			expectedRed: 255,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+
+			img := image.NewRGBA(image.Rect(0, 0, tt.width, tt.height))
+			for y := 0; y < tt.height; y++ {
+				for x := 0; x < tt.width; x++ {
+					img.SetRGBA(x, y, tt.c)
 				}
 			}
 
-			tmpDir := GinkgoT().TempDir()
+			tmpDir := t.TempDir()
 			outputFile := filepath.Join(tmpDir, "pixel_dump.txt")
 			err := video.WritePixelDump(img, outputFile)
-			Expect(err).NotTo(HaveOccurred())
+			g.Expect(err).NotTo(HaveOccurred())
 
 			pixels, err := video.ReadPixelDump(outputFile)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pixels).To(HaveLen(height))
-			Expect(pixels[0]).To(HaveLen(width))
-			Expect(pixels[0][0].Red).To(Equal(expectedRed))
-		},
-		Entry("small red image",
-			2,
-			2,
-			color.RGBA{R: 100, G: 0, B: 0, A: 255},
-			100,
-		),
-		Entry("small white image",
-			1,
-			1,
-			color.RGBA{R: 255, G: 255, B: 255, A: 255},
-			255,
-		),
-	)
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(pixels).To(HaveLen(tt.height))
+			g.Expect(pixels[0]).To(HaveLen(tt.width))
+			g.Expect(pixels[0][0].Red).To(Equal(tt.expectedRed))
+		})
+	}
+}
 
-	DescribeTable("surfaces parse errors",
-		func(contents string) {
-			tmpDir := GinkgoT().TempDir()
+func TestReadPixelDump_ParseErrors(t *testing.T) {
+	tests := []struct {
+		name     string
+		contents string
+	}{
+		{name: "invalid line format", contents: "1,2: (not,a,pixel)\n"},
+		{name: "missing coordinates", contents: "(1,2,3)\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGomegaWithT(t)
+
+			tmpDir := t.TempDir()
 			outputFile := filepath.Join(tmpDir, "bad_dump.txt")
-			err := os.WriteFile(outputFile, []byte(contents), 0644)
-			Expect(err).NotTo(HaveOccurred())
+			err := os.WriteFile(outputFile, []byte(tt.contents), 0644)
+			g.Expect(err).NotTo(HaveOccurred())
 
 			_, err = video.ReadPixelDump(outputFile)
-			Expect(err).To(HaveOccurred())
-		},
-		Entry("invalid line format", "1,2: (not,a,pixel)\n"),
-		Entry("missing coordinates", "(1,2,3)\n"),
-	)
-})
+			g.Expect(err).To(HaveOccurred())
+		})
+	}
+}
